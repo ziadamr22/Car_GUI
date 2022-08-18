@@ -39,20 +39,25 @@ class Window(QtWidgets.QMainWindow):
         self.ui.speed1.clicked.connect(self.Speed1)
         self.ui.speed2.clicked.connect(self.Speed2)
         self.ui.speed3.clicked.connect(self.Speed3)
-
-
-        ''' 
-        8 == forward
-        2 == back
-        '''
+        self.ui.Up.clicked.connect(self.f_up)
+        self.ui.Down.clicked.connect(self.f_back)
+        self.ui.Right.clicked.connect(self.f_right)
+        self.ui.Left.clicked.connect(self.f_left)
+        self.ui.Stop.clicked.connect(self.f_stop)
         self.i=0
         self.thread = VideoThread()
         self.thread.change_pixmap_signal.connect(self.update_image)
         self.thread.start()
-        ##sends signal to arduino
-    # def ArduinoSend(self,x):
-        # self.arduino.write(data=str(x,'utf-8'))
-    #update video frame every thread change
+    def f_up (self):
+            self.arduino.write(bytes('3' , 'utf-8'))
+    def f_back (self):
+            self.arduino.write(bytes('4' , 'utf-8'))
+    def f_right (self):
+            self.arduino.write(bytes('5' , 'utf-8'))
+    def f_left (self):
+            self.arduino.write(bytes('6' , 'utf-8'))
+    def f_stop (self):
+            self.arduino.write(bytes('7' , 'utf-8'))
     def Speed1 (self):
         self.arduino.write(bytes('0','utf-8'))
     def Speed2 (self):
@@ -60,6 +65,7 @@ class Window(QtWidgets.QMainWindow):
     def Speed3 (self):
         self.arduino.write(bytes('2','utf-8'))
 
+        #update video frame every thread change
     def update_image(self, cv_img):
         qt_img = self.convert_cv_qt(cv_img)
         

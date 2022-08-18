@@ -1,4 +1,4 @@
-#include <Keypad.h>
+// #include <Keypad.h>
 #define RED_PIN              11    //PWM pin   used common cathod RGB if u used common anode then change TurnON_RGB to 0 and TurnON_RGB to 255
 #define GREEN_PIN            10    //PWM pin
 #define BLUE_PIN             9     //PWM pin
@@ -24,16 +24,16 @@ int pwmOutput;
 char key;
 const byte ROWS = 4; //four rows
 const byte COLS = 4; //four columns
-char keys[ROWS][COLS] = {
-  {'1','2','3','A'},
-  {'4','5','6','B'},
-  {'7','8','9','C'},
-  {'*','0','#','D'}
-};                        
+// char keys[ROWS][COLS] = {
+//   {'1','2','3','A'},
+//   {'4','5','6','B'},
+//   {'7','8','9','C'},
+//   {'*','0','#','D'}
+// };                        
 byte rowPins[ROWS] = {0,1,5,6}; //connect to the row pinouts of the keypad
 byte colPins[COLS] = {7,8,12,13}; //connect to the column pinouts of the keypad
 
-Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );  // struct to pass (keys , rowpins,rows and cols) values to it 
+// Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );  // struct to pass (keys , rowpins,rows and cols) values to it 
 
 
 void setup() {
@@ -50,9 +50,6 @@ void setup() {
   // initializing Motor speed pins
   pinMode(C_Motor1_Speed_A3,OUTPUT);
   pinMode(C_Motor2_Speed_A3,OUTPUT);
-  
-
-  
 }
 
 void loop() {
@@ -62,44 +59,46 @@ void loop() {
    //pwmOutput = map(pwmOutput, 0, 1023, 0 , 255); 
    //analogWrite(C_Motor1_Speed_A3, pwmOutput); // Send PWM signal to L298N Enable pin
    
-   key = keypad.getKey();
+  //  key = keypad.getKey();
+     while (!Serial.available());
+  key = Serial.readString().toInt();
    if (key) 
    {  
-      if(key == '2')
+      if(key == 3) //Signal sent from python to move forward = 3
       {
         Forward();
       }
-      else if(key == '8')
+      else if(key == 4) //Signal sent from python to move backward = 4
       {
         Backward(); 
       }
-      else if(key == '6')
+      else if(key == 5) //Signal sent from python to move right = 5
       {
         Right();
       }
-      else if(key == '4')
+      else if(key == 6) //Signal sent from python to move left = 6
       {
         Left(); 
       }
-      else if(key == '5')
+      else if(key == 7) //Signal sent from python to  stop = 7
       {
         Stop();
       }
     
    }
-   
+   //analogWrite(C_Motor_Speed_A3, pwmOutput); // Send PWM signal to L298N Enable pin
+  //  key = keypad.getKey();
+  //  if (key) 
+  //  { 
+  //   SetMotor_Dir(key);
+  //  }   
   MotorSpeed = analogRead(pot);
   int Speed = SetMotor_Speed(MotorSpeed);
-  RGB_SpeedIndicator(Speed);
+  RGB_SpeedIndicator(key);
  
   
 
 }
-
-
-
-
-
 
 
 void RGB_SpeedIndicator(int MotorSpeed)
@@ -112,9 +111,9 @@ void RGB_SpeedIndicator(int MotorSpeed)
   }
   else if(MotorSpeed == 1)
   {
-    analogWrite(RED_PIN,TurnON_RGB); 
-    analogWrite(GREEN_PIN,TurnON_RGB);
-    analogWrite(BLUE_PIN,TurnOFF_RGB); 
+    analogWrite(RED_PIN,TurnOFF_RGB); 
+    analogWrite(GREEN_PIN,TurnOFF_RGB);
+    analogWrite(BLUE_PIN,TurnON_RGB); 
    }
   
   else if (MotorSpeed == 2){
