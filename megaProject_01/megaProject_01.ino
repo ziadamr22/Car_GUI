@@ -1,27 +1,35 @@
 // #include <Keypad.h>
-#define RED_PIN              11    //PWM pin   used common cathod RGB if u used common anode then change TurnON_RGB to 0 and TurnON_RGB to 255
-#define GREEN_PIN            10    //PWM pin
-#define BLUE_PIN             9     //PWM pin
-#define Enable_Pin           3     //PWM pin
+#define RED_PIN              11    //used common cathod RGB if u used common anode then change TurnON_RGB to 0 and TurnON_RGB to 255
+#define GREEN_PIN            10    
+#define BLUE_PIN             9     
 #define C_Motor1_dir_A1      2
 #define C_Motor1_dir_A2      4
 #define C_Motor2_dir_A1      7
 #define C_Motor2_dir_A2      8 
 #define C_Motor1_Speed_A3    3     //PWM pin
-#define C_Motor2_Speed_A3    6      //PWM pin   
+#define C_Motor2_Speed_A3    6     //PWM pin   
+#define Low_InVoltage_LED    5
+//#define HIGH_InVoltage_LED   12
 #define pot                  A0
 //#define C_Motor_pot          A1 
 #define joyX                 A2
 #define joyY                 A3
-#define TurnON_RGB           255
-#define TurnOFF_RGB          0
+#define VoltageSensor        A4
+#define TurnON_RGB           HIGH
+#define TurnOFF_RGB          LOW
 #define Low_Speed            50 
 #define Med_Speed            150
 #define High_Speed           255
+#define Mp_resolution        1023.0
+#define factor               0.2           // this voltage sensor consists of a voltage divider circuit and its factor =R2/(R1+R2) = 7.5k/(30k+7.5k) = 0.2 where R2 is connected in parallel with Vout 
+#define refVoltage           5.0           // arduino voltage
+#define MinVoltage           15
+//#define MaxVoltage           24
 int MotorSpeed;
 int X_value,Y_value;
 int pwmOutput;
-char key;
+int Voltage;
+int key;
 const byte ROWS = 4; //four rows
 const byte COLS = 4; //four columns
 // char keys[ROWS][COLS] = {
@@ -50,6 +58,8 @@ void setup() {
   // initializing Motor speed pins
   pinMode(C_Motor1_Speed_A3,OUTPUT);
   pinMode(C_Motor2_Speed_A3,OUTPUT);
+  // initializing input voltage indicator pins
+  pinMode(Low_InVoltage_LED,OUTPUT);
 }
 
 void loop() {
@@ -95,9 +105,10 @@ void loop() {
   MotorSpeed = analogRead(pot);
   int Speed = SetMotor_Speed(MotorSpeed);
   RGB_SpeedIndicator(key);
- 
-  
 
+  Voltage = analogRead(VoltageSensor);
+  Voltage_Sensor(Voltage);
+ 
 }
 
 
@@ -105,21 +116,21 @@ void RGB_SpeedIndicator(int MotorSpeed)
 { 
   if(MotorSpeed == 0)
   {
-    analogWrite(GREEN_PIN,TurnON_RGB); 
-    analogWrite(RED_PIN,TurnOFF_RGB); 
-    analogWrite(BLUE_PIN,TurnOFF_RGB); 
+    digitalWrite(GREEN_PIN,TurnON_RGB); 
+    digitalWrite(RED_PIN,TurnOFF_RGB); 
+    digitalWrite(BLUE_PIN,TurnOFF_RGB); 
   }
   else if(MotorSpeed == 1)
   {
-    analogWrite(RED_PIN,TurnOFF_RGB); 
-    analogWrite(GREEN_PIN,TurnOFF_RGB);
-    analogWrite(BLUE_PIN,TurnON_RGB); 
+    digitalWrite(RED_PIN,TurnOFF_RGB); 
+    digitalWrite(GREEN_PIN,TurnOFF_RGB);
+    digitalWrite(BLUE_PIN,TurnON_RGB); 
    }
   
   else if (MotorSpeed == 2){
-    analogWrite(RED_PIN,TurnON_RGB); 
-    analogWrite(GREEN_PIN,TurnOFF_RGB);
-    analogWrite(BLUE_PIN,TurnOFF_RGB); 
+    digitalWrite(RED_PIN,TurnON_RGB); 
+    digitalWrite(GREEN_PIN,TurnOFF_RGB);
+    digitalWrite(BLUE_PIN,TurnOFF_RGB); 
   }
   
 }
@@ -198,4 +209,25 @@ void Stop()
     digitalWrite(C_Motor2_dir_A1, LOW);
     digitalWrite(C_Motor2_dir_A2, LOW);
     delay(20);
+}
+
+void Voltage_Sensor(int Voltage)
+{
+    float mapped_voltage = 0.0;
+    float InVoltage = 0.0;
+    mapped_voltage = (Voltage * refVoltage)/Mp_resolution;
+    InVoltage =  mapped_voltage / factor;
+    if(InVoltage < MinVoltage )                       // if the voltage became below min voltage then indicator led will blink until input voltage becomes above min voltage 
+    {
+      digitalWrite(Low_InVoltage_LED,HIGH);
+      delay(500); 
+      digitalWrite(Low_InVoltage_LED,LOW);
+      delay(500);
+    }
+    else if(InVoltage >= MinVoltage)
+    {
+      digitalWrite(Low_InVoltage_LED,LOW);
+    }
+    Serial.println(InVoltage);                      // the way we display the voltage will be changed
+    delay(250);
 }
