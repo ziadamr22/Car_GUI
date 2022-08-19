@@ -43,7 +43,7 @@
 #define Sensitivity          0.185
 #define NoLoadVolt           2.5
 #define High_Consumed_I_LED  13
-#define MaxCurrent          4
+#define MaxCurrent           4
 
 int MotorSpeed;
 int X_value,Y_value;
@@ -107,9 +107,8 @@ void loop() {
   // Voltage_Sensor(Voltage);
   
 
-  RGB_SpeedIndicator(key);
-  // if (key)                              
-   //{  
+  //RGB_SpeedIndicator(key);
+if(key == 1){                             // Signal to be sent from python to activate DC motor mode     // Note: till now,there is no HW option to switch between these 2 modes
       if(key == 3 || (Y_value < 450)) //Signal sent from python to move forward = 3
       {
         Forward();
@@ -130,8 +129,16 @@ void loop() {
       {
         Stop();
       }
+   }
+   else if(key == 2)
+   {
+     ESC_Speed = analogRead(pot); 
+     Speed = SetESC_Speed(ESC_Speed);       // will be modified
+     Speed = map(Speed,0,180,0,2);
+     RGB_SpeedIndicator(Speed);
+   }
     
- //  }
+
    //analogWrite(C_Motor_Speed_A3, pwmOutput); // Send PWM signal to L298N Enable pin
   //  key = keypad.getKey();
   //  if (key) 
@@ -140,8 +147,8 @@ void loop() {
   //  }   
   MotorSpeed = analogRead(pot);
   Speed = SetMotor_Speed(MotorSpeed); 
- // ESC_Speed = analogRead(pot); 
- // Speed = SetESC_Speed(ESC_Speed);
+  ESC_Speed = analogRead(pot); 
+  Speed = SetESC_Speed(ESC_Speed);
  //Current = analogRead(CurrentSensor);
   
 }
