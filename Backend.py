@@ -1,21 +1,33 @@
 import sys
-from termios import VEOL
-from FrontEnd import Ui_MainWindow
+from FrontEnd import Ui_MainWindow_
+from swTask import  Ui_MainWindow
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QRunnable, QThreadPool
 from PyQt5.QtGui import QPixmap
 import cv2 as cv
 import numpy as np
 import serial 
+import time
 global arduino
 arduino = serial.Serial(port='/dev/cu.usbmodem11301'
-                        ,baudrate=9600)
+                        ,baudrate=19200,stopbits=1,timeout=1)
+class getArduino(QRunnable):
+    def __init__(self):
+        super(getArduino,self).__init__()
+        self.signal = None
+    def run(self):
+            self.signal =  arduino.readline().strip().decode("utf-8")
+            print(self.signal)        
+    def getRead(self):
+        Ar_signal = self.signal
+        return  Ar_signal
+
 class sendArduino(QRunnable):
     def __init__(self,x):
         super(sendArduino,self).__init__()
         self.x = x
     def run(self):
-        arduino.write(bytes(self.x,'utf-8'))
+            arduino.write(bytes(self.x,'utf-8'))
 class VideoThread(QtCore.QThread):# initialise live video feed thread
     change_pixmap_signal = QtCore.pyqtSignal(np.ndarray)
     def run(self):
@@ -27,10 +39,18 @@ class VideoThread(QtCore.QThread):# initialise live video feed thread
             if ret:
                 self.change_pixmap_signal.emit(cv_img)
 # initialise GUI Window
-class Window(QtWidgets.QMainWindow):
+class secondWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+
+
+
+class Window(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_MainWindow_()
         self.ui.setupUi(self)
         self.ui.pushButton.clicked.connect(self.screenshot)
         self.uplogo = QtGui.QPixmap("up.png")
@@ -51,11 +71,28 @@ class Window(QtWidgets.QMainWindow):
         self.ui.Right.clicked.connect(self.f_right)
         self.ui.Left.clicked.connect(self.f_left)
         self.ui.Stop.clicked.connect(self.f_stop)
+        self.ui.swTask.clicked.connect(self.newWindow)
+        self.nwindow = secondWindow()
         self.threadpool = QThreadPool()
+        # self.timer = QtCore.QTimer(self)
+        # self.timer.timeout.connect(self.showVolt)
+        # self.timer.start(1500)
         self.i=0
         self.thread = VideoThread()
         self.thread.change_pixmap_signal.connect(self.update)
         self.thread.start()
+    def newWindow(self):
+        self.nwindow.show()
+    # def showVolt(self):
+    #     volt = getArduino()
+    #     while True:
+    #         volt.run()
+    #         time.sleep(0.1)
+    #         break
+    #     Read = volt.getRead()
+    #     self.ui.Volt.setText(Read+"V")
+    #     self.threadpool.start(volt)
+
     def f_up (self):
         up = sendArduino('3')
         self.threadpool.start(up)
