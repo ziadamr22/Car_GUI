@@ -1,14 +1,22 @@
-from encodings import utf_8
 import sys
+from termios import VEOL
 from FrontEnd import Ui_MainWindow
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QRunnable, QThreadPool
 from PyQt5.QtGui import QPixmap
 import cv2 as cv
-from PyQt5.uic import loadUi
 import numpy as np
 import serial 
-# initialise Video Recording
-class VideoThread(QtCore.QThread):
+global arduino
+arduino = serial.Serial(port='/dev/cu.usbmodem11301'
+                        ,baudrate=9600)
+class sendArduino(QRunnable):
+    def __init__(self,x):
+        super(sendArduino,self).__init__()
+        self.x = x
+    def run(self):
+        arduino.write(bytes(self.x,'utf-8'))
+class VideoThread(QtCore.QThread):# initialise live video feed thread
     change_pixmap_signal = QtCore.pyqtSignal(np.ndarray)
     def run(self):
         # capture from web cam
@@ -21,7 +29,6 @@ class VideoThread(QtCore.QThread):
 # initialise GUI Window
 class Window(QtWidgets.QMainWindow):
     def __init__(self):
-        self.arduino = serial.Serial(port='/dev/cu.usbmodem11301',baudrate=9600)
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -44,39 +51,48 @@ class Window(QtWidgets.QMainWindow):
         self.ui.Right.clicked.connect(self.f_right)
         self.ui.Left.clicked.connect(self.f_left)
         self.ui.Stop.clicked.connect(self.f_stop)
+        self.threadpool = QThreadPool()
         self.i=0
         self.thread = VideoThread()
-        self.thread.change_pixmap_signal.connect(self.update_image)
+        self.thread.change_pixmap_signal.connect(self.update)
         self.thread.start()
     def f_up (self):
-            self.arduino.write(bytes('3' , 'utf-8'))
+        up = sendArduino('3')
+        self.threadpool.start(up)
     def f_back (self):
-            self.arduino.write(bytes('4' , 'utf-8'))
+        back = sendArduino('4')
+        self.threadpool.start(back)    
     def f_right (self):
-            self.arduino.write(bytes('5' , 'utf-8'))
+        right = sendArduino('5')
+        self.threadpool.start(right)
     def f_left (self):
-            self.arduino.write(bytes('6' , 'utf-8'))
+        left = sendArduino('6')
+        self.threadpool.start(left)
     def f_stop (self):
-            self.arduino.write(bytes('7' , 'utf-8'))
+        stop = sendArduino('7')
+        self.threadpool.start(stop)
     def Speed1 (self):
-        self.arduino.write(bytes('0','utf-8'))
+        s_1 = sendArduino('0')
+        self.threadpool.start(s_1)
     def Speed2 (self):
-        self.arduino.write(bytes('1','utf-8'))
+        s_2 = sendArduino('1')
+        self.threadpool.start(s_2)
     def Speed3 (self):
-        self.arduino.write(bytes('2','utf-8'))
-
-        #update video frame every thread change
-    def update_image(self, cv_img):
+        s_3 = sendArduino('2')
+        self.threadpool.start(s_3)
+        #update video frame
+    def update(self, cv_img):
         qt_img = self.convert_cv_qt(cv_img)
-        
         self.ui.label.setPixmap(qt_img)
     #convert numpy image to qt image
     def convert_cv_qt(self, cv_img):
         rgb_image = cv.cvtColor(cv_img, cv.COLOR_BGR2RGB)
         h, w, ch = rgb_image.shape
         bytes_per_line = ch * w
-        convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
-        p = convert_to_Qt_format.scaled(450, 450, QtCore.Qt.KeepAspectRatio)
+        convert_to_Qt_format = QtGui.QImage(rgb_image.data,
+            w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+        p = convert_to_Qt_format.scaled(450, 450,
+            QtCore.Qt.KeepAspectRatio)
         return QPixmap.fromImage(p)
     #Screeshot function
     def screenshot(self):

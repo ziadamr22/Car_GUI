@@ -30,6 +30,7 @@ int X_value,Y_value;
 int pwmOutput;
 int Voltage;
 int key;
+boolean newData = false;
 const byte ROWS = 4; //four rows
 const byte COLS = 4; //four columns
 // char keys[ROWS][COLS] = {
@@ -42,7 +43,6 @@ byte rowPins[ROWS] = {0,1,5,6}; //connect to the row pinouts of the keypad
 byte colPins[COLS] = {7,8,12,13}; //connect to the column pinouts of the keypad
 
 // Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );  // struct to pass (keys , rowpins,rows and cols) values to it 
-
 
 void setup() {
   Serial.begin(9600);
@@ -70,8 +70,12 @@ void loop() {
    //analogWrite(C_Motor1_Speed_A3, pwmOutput); // Send PWM signal to L298N Enable pin
    
   //  key = keypad.getKey();
-     while (!Serial.available());
-  key = Serial.readString().toInt();
+  key = String(getData()).toInt();
+  // Voltage = analogRead(VoltageSensor);
+  // Voltage_Sensor(Voltage);
+  
+
+  RGB_SpeedIndicator(key);
    if (key) 
    {  
       if(key == 3) //Signal sent from python to move forward = 3
@@ -103,15 +107,8 @@ void loop() {
   //   SetMotor_Dir(key);
   //  }   
   MotorSpeed = analogRead(pot);
-  int Speed = SetMotor_Speed(MotorSpeed);
-  RGB_SpeedIndicator(key);
-
-  Voltage = analogRead(VoltageSensor);
-  Voltage_Sensor(Voltage);
- 
+  int Speed = SetMotor_Speed(MotorSpeed);  
 }
-
-
 void RGB_SpeedIndicator(int MotorSpeed)
 { 
   if(MotorSpeed == 0)
@@ -231,3 +228,11 @@ void Voltage_Sensor(int Voltage)
     Serial.println(InVoltage);                      // the way we display the voltage will be changed
     delay(250);
 }
+char getData() {
+    if (Serial.available() > 0) {
+        char receivedChar = Serial.read();
+        newData = true;
+    return receivedChar;
+    }
+}
+
