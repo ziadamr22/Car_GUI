@@ -45,7 +45,7 @@ byte colPins[COLS] = {7,8,12,13}; //connect to the column pinouts of the keypad
 // Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );  // struct to pass (keys , rowpins,rows and cols) values to it 
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(19200);
   // initializing indicator pins
   pinMode(RED_PIN,OUTPUT);
   pinMode(GREEN_PIN,OUTPUT);
@@ -61,20 +61,27 @@ void setup() {
   // initializing input voltage indicator pins
   pinMode(Low_InVoltage_LED,OUTPUT);
 }
-
+int start = millis();
 void loop() {
   //X_value = analogRead(joyX);
   //Y_value = analogRead(joyY);
    //pwmOutput = analogRead(pot); 
    //pwmOutput = map(pwmOutput, 0, 1023, 0 , 255); 
    //analogWrite(C_Motor1_Speed_A3, pwmOutput); // Send PWM signal to L298N Enable pin
-   
+  int stop = millis();
   //  key = keypad.getKey();
   key = String(getData()).toInt();
-  // Voltage = analogRead(VoltageSensor);
-  // Voltage_Sensor(Voltage);
+  Voltage = analogRead(VoltageSensor);
+  float mapped_voltage = 0.0;
+  float InVoltage = 0.0;
+  mapped_voltage = (Voltage * refVoltage)/Mp_resolution;
+  InVoltage =  mapped_voltage / factor;
+  // if(stop-start>=500)
+  // {
+    Serial.println(InVoltage);
+    start = stop;
+  // }
   
-
   RGB_SpeedIndicator(key);
    if (key) 
    {  
@@ -214,6 +221,7 @@ void Voltage_Sensor(int Voltage)
     float InVoltage = 0.0;
     mapped_voltage = (Voltage * refVoltage)/Mp_resolution;
     InVoltage =  mapped_voltage / factor;
+    Serial.println(InVoltage);                      // the way we display the voltage will be changed
     if(InVoltage < MinVoltage )                       // if the voltage became below min voltage then indicator led will blink until input voltage becomes above min voltage 
     {
       digitalWrite(Low_InVoltage_LED,HIGH);
@@ -225,7 +233,6 @@ void Voltage_Sensor(int Voltage)
     {
       digitalWrite(Low_InVoltage_LED,LOW);
     }
-    Serial.println(InVoltage);                      // the way we display the voltage will be changed
     delay(250);
 }
 char getData() {
