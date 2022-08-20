@@ -1,13 +1,16 @@
 import sys
+from urllib import response
+from StitchUI import Ui_Dialog
 from FrontEnd import Ui_MainWindow_
-from swTask import  Ui_MainWindow
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QRunnable, QThreadPool
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QDialog,QFileDialog
 import cv2 as cv
 import numpy as np
 import serial 
-import time
+import matplotlib.pyplot as plt
+import glob
 global arduino
 arduino = serial.Serial(port='/dev/cu.usbmodem11301'
                         ,baudrate=19200,stopbits=1,timeout=1)
@@ -38,15 +41,140 @@ class VideoThread(QtCore.QThread):# initialise live video feed thread
             cv_img = cv.flip(cv_img,1)
             if ret:
                 self.change_pixmap_signal.emit(cv_img)
-# initialise GUI Window
-class secondWindow(QtWidgets.QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.ui = Ui_MainWindow()
+
+#initialise stitching window
+class StitchUI(QDialog):
+    def __init__(self,parent =None):
+        super().__init__(parent)
+        self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+        self.location = ""
+        self.ui.Choose.clicked.connect(self.dialog)
+        self.ui.Initiate.clicked.connect(self.MAINF)
+    def dialog(self):
+        self.location = self.getDirectory()
+        self.ui.label.setText(self.location)
+    def getDirectory(self):
+        response = QFileDialog.getExistingDirectory(
+            self,
+            caption = "Select a folder",
+        )
+        return response
+        
+    def homography_stitching(self,keypoints_train_img, keypoints_query_img, matches, reprojThresh):
+        keypoints_train_img = np.float32([keypoint.pt for keypoint in keypoints_train_img])
+        keypoints_query_img = np.float32([keypoint.pt for keypoint in keypoints_query_img])
+
+        if len(matches) >4:
+            points_train = np.float32([keypoints_train_img[m.queryIdx] for m in matches])
+            points_query = np.float32([keypoints_query_img[m.trainIdx] for m in matches])
+            (H, status) = cv.findHomography(points_train, points_query, cv.RANSAC, reprojThresh)
+            return (matches, H, status)
+        else:
+            print("fail")
+            return None
+    def _get_kp_features(self,image):
+
+        (keypoints, features) = cv.SIFT_create().detectAndCompute(image, None)
+
+        return (keypoints, features)
+    def create_matching_object(self,method, crossCheck):
+        if method == 'sift' or method == 'surf':
+            bf = cv.BFMatcher(cv.NORM_L2, crossCheck=crossCheck)
+        elif method == 'orb' or method == 'brisk':
+            bf = cv.BFMatcher(cv.NORM_HAMMING, crossCheck=crossCheck)
+        return bf
+    def key_points_matching(self,features_train_img, features_query_img, method):
+        bf = self.create_matching_object(method, crossCheck=True)
+        best_matches = bf.match(features_train_img, features_query_img)
+        rawMatches = sorted(best_matches, key=lambda x: x.distance)
+        return rawMatches
+    def key_points_matching_KNN(self,features_train_img, features_query_img, ratio, method):
+        bf = self.create_matching_object(method, crossCheck=False)
+        rawMatches = bf.knnMatch(features_train_img, features_query_img, k=2)
+        print("Raw matches (knn):", len(rawMatches))
+        matches = []
+        for m,n in rawMatches:
+            if m.distance < n.distance * ratio:
+                matches.append(m)
+        return matches
+    def maxmatch(self,train_photo,query_photo):
+        kp1,fea1=self._get_kp_features(train_photo, 'sift')
+        kp2,fea2=self._get_kp_features(query_photo, 'sift')
+        matches=self.key_points_matching(fea1,fea2,method=self.feature_extraction_algo)
+        return matches
+
+    def _adjust(self,StitchedImage):
+        gray = cv.cvtColor(StitchedImage, cv.COLOR_BGR2GRAY)
+        _, thresh = cv.threshold(gray, 1, 255, cv.THRESH_BINARY)
+        contours, hierarchy = cv.findContours(thresh, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+        cnt = contours[0]
+        x, y, w, h = cv.boundingRect(cnt)
+        StitchedImage = StitchedImage[y:y + h, x:x + w]
+        return StitchedImage
+
+    def _stitcher(self,query_photo, train_photo):
+        query_photo_gray = cv.cvtColor(query_photo, cv.COLOR_RGB2GRAY)
+        train_photo_gray = cv.cvtColor(train_photo, cv.COLOR_RGB2GRAY)
+        keypoints_train_img, features_train_img = self._get_kp_features(train_photo_gray)
+        keypoints_query_img, features_query_img = self._get_kp_features(query_photo_gray)
+        if self.feature_to_match == 'bf':
+            matches = self.key_points_matching(features_train_img, features_query_img, method=self.feature_extraction_algo)
+
+        elif self.feature_to_match == 'knn':
+            matches = self.key_points_matching_KNN(features_train_img, features_query_img, ratio=0.75,
+                                            method=self.feature_extraction_algo)
+        M = self.homography_stitching(keypoints_train_img, keypoints_query_img, matches, reprojThresh=54)
+        if M is None:
+            print("Error!")
+            return
+        (matches, Homography_Matrix, status) = M
+        width = query_photo.shape[1] + train_photo.shape[1]
+        height = max(query_photo.shape[0], train_photo.shape[0])
+        result = cv.warpPerspective(train_photo, Homography_Matrix, (width, height))
+        result[0:query_photo.shape[0], 0:query_photo.shape[1]] = query_photo
 
 
-
+        mapped_features_image = cv.drawMatches(train_photo, keypoints_train_img, query_photo, keypoints_query_img,
+                                                matches[:100],
+                                                None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        plt.imshow(mapped_features_image)
+        plt.axis('off')
+        plt.show()
+        return result
+    def MAINF(self):
+        if __name__ == "__main__":
+            self.feature_extraction_algo = 'sift'
+            self.feature_to_match = 'knn'
+            temp = self.location+"/*.jpg"
+            image_paths = glob.glob(temp)
+            self.index = -1
+            images = []
+            for image in image_paths:
+                img = cv.imread(image)
+                images.append(img)
+            for i in range(0,len(images)):
+                self.index=self.index+1
+                self.maxmatches=0
+                for j in range(0,len(images)):
+                        self.keypoints_i ,features_i=self._get_kp_features(images[self.index])
+                        self.keypoints_j,features_j = self._get_kp_features(images[j])
+                        matches = self.key_points_matching_KNN(features_i, features_j, ratio=0.75,method=self.feature_extraction_algo)
+                        if len(matches)>self.maxmatches and self.index!=j:
+                                self.maxmatches = len(matches)
+                                self.pair=(self.index,j)
+                if len(images)==1:exit(0)
+                StitchedImage = self._stitcher(images[self.pair[1]], images[self.pair[0]])
+                StitchedImage=self._adjust(StitchedImage)
+                if StitchedImage.shape[1]==(images[self.pair[0]].shape[1])or StitchedImage.shape[1]==(images[self.pair[1]].shape[1]):
+                    StitchedImage = self._stitcher(images[self.pair[0]], images[self.pair[1]])
+                    StitchedImage = self._adjust(StitchedImage)
+                images.pop(self.pair[0])
+                images.pop(self.pair[1]-1)
+                self.index=self.index-1
+                images.insert(0,StitchedImage)
+                cv.imwrite("Stitched_Panorama.jpg", StitchedImage)
+# initialise GUI Window
 class Window(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -71,8 +199,7 @@ class Window(QtWidgets.QMainWindow):
         self.ui.Right.clicked.connect(self.f_right)
         self.ui.Left.clicked.connect(self.f_left)
         self.ui.Stop.clicked.connect(self.f_stop)
-        self.ui.swTask.clicked.connect(self.newWindow)
-        self.nwindow = secondWindow()
+        self.ui.swTask.clicked.connect(self.Stitch)
         self.threadpool = QThreadPool()
         # self.timer = QtCore.QTimer(self)
         # self.timer.timeout.connect(self.showVolt)
@@ -81,8 +208,9 @@ class Window(QtWidgets.QMainWindow):
         self.thread = VideoThread()
         self.thread.change_pixmap_signal.connect(self.update)
         self.thread.start()
-    def newWindow(self):
-        self.nwindow.show()
+    def Stitch(self):
+        stitch = StitchUI(self)
+        stitch.exec()
     # def showVolt(self):
     #     volt = getArduino()
     #     while True:

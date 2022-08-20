@@ -1,3 +1,6 @@
-        self.timer = QtCore.QTimer(self)
-        self.timer.timeout.connect(self.showVolt)
-        self.timer.start(1500)
+alog.DontUseNativeDialog | dialog.ShowDirsOnly)
+        dialog.setOptions(options)
+
+        def checkLineEdit(path):
+            if not path:
+                return
