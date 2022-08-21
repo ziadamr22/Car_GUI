@@ -1,5 +1,5 @@
-import re
 import sys
+import imutils
 from urllib import response
 from StitchUI import Ui_Dialog
 from FrontEnd import Ui_MainWindow_
@@ -13,8 +13,8 @@ import serial
 import matplotlib.pyplot as plt
 import glob
 global arduino
-# port = '/dev/cu.usbmodem11301'
-port = '/dev/cu.HC-06'
+port = '/dev/cu.usbmodem11301'
+# port = '/dev/cu.HC-06'
 arduino = serial.Serial(port= port
                         ,baudrate=9600,timeout=1)
 class getArduino(QRunnable):
@@ -22,7 +22,7 @@ class getArduino(QRunnable):
         super(getArduino,self).__init__()
         self.signal = None
     def run(self):
-            return  arduino.readline().strip().decode("utf-8")
+            self.signal =   arduino.readline().strip().decode("utf-8")
     def getRead(self):
         Ar_signal = self.signal
         return  Ar_signal
@@ -150,32 +150,90 @@ class StitchUI(QDialog):
             self.feature_to_match = 'knn'
             temp = self.location+"/*.jpg"
             image_paths = glob.glob(temp)
-            self.index = -1
+            index = -1
             images = []
             for image in image_paths:
                 img = cv.imread(image)
                 images.append(img)
             for i in range(0,len(images)):
-                self.index=self.index+1
-                self.maxmatches=0
+                index=index+1
+                maxmatches=0
                 for j in range(0,len(images)):
-                        self.keypoints_i ,features_i=self._get_kp_features(images[self.index])
-                        self.keypoints_j,features_j = self._get_kp_features(images[j])
-                        matches = self.key_points_matching_KNN(features_i, features_j, ratio=0.75,method=self.feature_extraction_algo)
-                        if len(matches)>self.maxmatches and self.index!=j:
-                                self.maxmatches = len(matches)
-                                self.pair=(self.index,j)
-                if len(images)==1:exit(0)
-                StitchedImage = self._stitcher(images[self.pair[1]], images[self.pair[0]])
-                StitchedImage=self._adjust(StitchedImage)
-                if StitchedImage.shape[1]==(images[self.pair[0]].shape[1])or StitchedImage.shape[1]==(images[self.pair[1]].shape[1]):
-                    StitchedImage = self._stitcher(images[self.pair[0]], images[self.pair[1]])
-                    StitchedImage = self._adjust(StitchedImage)
-                images.pop(self.pair[0])
-                images.pop(self.pair[1]-1)
-                self.index=self.index-1
-                images.insert(0,StitchedImage)
-            cv.imwrite("Stitched_Panorama.jpg", StitchedImage)
+                    self.keypoints_i ,features_i=self._get_kp_features(images[index])
+                    self.keypoints_j,features_j = self._get_kp_features(images[j])
+                    matches = self.key_points_matching_KNN(features_i, features_j, ratio=0.75,method=self.feature_extraction_algo)
+                    if len(matches)>maxmatches and index!=j:
+                        maxmatches = len(matches)
+                        pair=(index,j)
+                if len(images)>1:
+                    StitchedImage = self._stitcher(images[pair[1]], images[pair[0]])
+                    StitchedImage=self._adjust(StitchedImage)
+                    if StitchedImage.shape[1]==(images[pair[0]].shape[1])or StitchedImage.shape[1]==(images[pair[1]].shape[1]):
+                            StitchedImage = self._stitcher(images[pair[0]], images[pair[1]])
+                            StitchedImage = self._adjust(StitchedImage)
+                    images.pop(pair[0])
+                    images.pop(pair[1]-1)
+                    index=index-1
+                    images.insert(0,StitchedImage)
+            cv.imwrite("Stitched.jpg", StitchedImage)
+            image = StitchedImage
+            original = image.copy()
+            hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+
+            hsv_lower = np.array([23, 19, 141])
+            hsv_upper = np.array([167, 255, 255])
+            mask = cv.inRange(hsv, hsv_lower, hsv_upper)
+            result = cv.bitwise_and(original, original, mask=mask)
+
+            img = result
+            rgb_img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+            plt.figure(figsize=(15, 15))
+            # plt.imshow(rgb_img)
+            # plt.show()
+            # grayscale..
+            img = cv.GaussianBlur(img, (7, 7), 1)
+            gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+            # plt.imshow(gray)
+
+            thresh, thresh_img = cv.threshold(gray, 0, 255, cv.THRESH_BINARY)
+            rgb_img = cv.cvtColor(thresh_img, cv.COLOR_BGR2RGB)
+            plt.imshow(rgb_img)
+            plt.show()
+            conts = cv.findContours(thresh_img, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+            conts = imutils.grab_contours(conts)
+            print(len(conts))
+            cont_img = np.zeros(img.shape)
+            for c in conts:
+                box = cv.minAreaRect(c)
+                box = cv.boxPoints(box)
+                box = np.array(box, dtype='int')
+                x, y, w, h = cv.boundingRect(c)
+                aspect_ratio = float(w) / h
+                if cv.contourArea(c) < 10000 or w > 1200 or h > 430:
+                    continue
+                print(x, y, w, h)
+                cv.drawContours(cont_img, [c], -1, (0, 255, 255, 2))
+                cv.drawContours(cont_img, [box], -1, (255, 255, 255, 1))
+                approx = cv.approxPolyDP(c, 0.03 * cv.arcLength(c, True), True)
+                print(len(approx))
+                if len(approx) >= 5 and aspect_ratio < 1.2:
+                    if w > 10 and h > 10:
+                        cv.drawContours(image, [box], -1, (255, 179, 0,), 10)
+                        cv.putText(image, "Sea Star", (x - 50, y - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 8)
+                elif len(approx) >=5 and len(approx) < 8 and aspect_ratio > 1.2:
+                    if w > 10 and h > 10 and w < 700 and h < 700:
+                        cv.putText(image, "Sponge", (x - 20, y - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 8)
+                        cv.drawContours(image, [box], -1, (15, 242, 113,), 10)
+
+                elif len(approx) == 4 and aspect_ratio < 1.5:
+                    cv.putText(image, "Coral Fragment", (x - 100, y - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 8)
+                    cv.drawContours(image, [box], -1, (0, 68, 255,), 10)
+                elif aspect_ratio > 3:
+                    cv.putText(image, "Coral Colony", (x + 100, y - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 8)
+                    cv.drawContours(image, [box], -1, (12, 121, 59,), 10)
+            cv.imwrite('final.jpg', image)
+
 # initialise GUI Window
 class Window(QtWidgets.QMainWindow):
     def __init__(self):
@@ -205,9 +263,11 @@ class Window(QtWidgets.QMainWindow):
         self.ui.MOTOR.clicked.connect(self.selectMotor)
         self.ui.ESC.clicked.connect(self.selectESC)
         self.threadpool = QThreadPool()
-        # self.timer = QtCore.QTimer(self)
-        # self.timer.timeout.connect(self.showVolt)
-        # self.timer.start(15)
+        global volt
+        volt = getArduino()
+        self.timer = QtCore.QTimer(self)
+        self.timer.timeout.connect(self.showVolt)
+        self.timer.start(3000)
         self.i=0
         self.thread = VideoThread()
         self.thread.change_pixmap_signal.connect(self.update)
@@ -215,12 +275,13 @@ class Window(QtWidgets.QMainWindow):
     def Stitch(self):
         stitch = StitchUI(self)
         stitch.exec()
-    # def showVolt(self):
-    #     volt = getArduino()
-    #     read = str(volt.getRead())
-    #     self.ui.Volt.setText(read+"V")
-    #     print(read)
-    #     self.threadpool.start(volt)
+    def showVolt(self):
+        volt = getArduino()
+        volt.run()
+        read = volt.getRead()
+        self.ui.Volt.setText(read+"V")
+        print(read)
+        self.threadpool.start(volt)
     def selectMotor(self):
         motor = sendArduino('m1')
         self.threadpool.start(motor)

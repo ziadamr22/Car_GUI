@@ -95,10 +95,10 @@ void loop() {
   //pwmOutput = map(pwmOutput, 0, 1023, 0 , 255);
   //analogWrite(C_Motor1_Speed_A3, pwmOutput); // Send PWM signal to L298N Enable pin
   //  key = keypad.getKey();
-  Serial.println("Bluetooth Ready!");
+  // Serial.println("Bluetooth Ready!");
   while(!Serial.available());
   key = Serial.readString();
-  Serial.println(key);
+  // Serial.println(key);
   // Voltage = analogRead(VoltageSensor);
   // float mapped_voltage = 0.0;
   // float InVoltage = 0.0;
@@ -132,15 +132,15 @@ void loop() {
           } else if (dir == '5')  //Signal sent from python to move right = 5
           {
             Right();
-            Serial.println("Right");
-          } else if (dir == '6')  //Signal sent from python to move left = 6
+            // Serial.println("Right");
+           } else if (dir == '6')  //Signal sent from python to move left = 6
           {
             Left();
-            Serial.println("left");
+            // Serial.println("left");
           } else if (dir == '7')  //Signal sent from python to  stop = 7
           {
             Stop();
-            Serial.println("stop");
+            // Serial.println("stop");
           }
      }
     else if (motor == "2") {
@@ -162,7 +162,7 @@ void loop() {
     //Speed = SetMotor_Speed(MotorSpeed);
     ESC_Speed = analogRead(pot);
     Speed = SetESC_Speed(ESC_Speed);
-   // RGB_SpeedIndicator(key);
+
     //Current = analogRead(CurrentSensor);
   
 }

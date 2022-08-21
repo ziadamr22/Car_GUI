@@ -218,7 +218,7 @@ class Ui_MainWindow_(object):
         self.speed1.setText(_translate("MainWindow", "1"))
         self.speed2.setText(_translate("MainWindow", "2"))
         self.speed3.setText(_translate("MainWindow", "3"))
-        self.label.setText(_translate("MainWindow", "TextLabel"))
+        self.label.setText(_translate("MainWindow", "Loading Camera..."))
         self.swTask.setText(_translate("MainWindow", "Software Task"))
         self.label_4.setText(_translate("MainWindow", "Connection"))
         self.Volt.setText(_translate("MainWindow", "Voltage : "))
