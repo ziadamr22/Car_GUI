@@ -62,7 +62,6 @@ class StitchUI(QDialog):
             caption = "Select a folder",
         )
         return response
-        
     def homography_stitching(self,keypoints_train_img, keypoints_query_img, matches, reprojThresh):
         keypoints_train_img = np.float32([keypoint.pt for keypoint in keypoints_train_img])
         keypoints_query_img = np.float32([keypoint.pt for keypoint in keypoints_query_img])
@@ -86,11 +85,7 @@ class StitchUI(QDialog):
         elif method == 'orb' or method == 'brisk':
             bf = cv.BFMatcher(cv.NORM_HAMMING, crossCheck=crossCheck)
         return bf
-    def key_points_matching(self,features_train_img, features_query_img, method):
-        bf = self.create_matching_object(method, crossCheck=True)
-        best_matches = bf.match(features_train_img, features_query_img)
-        rawMatches = sorted(best_matches, key=lambda x: x.distance)
-        return rawMatches
+
     def key_points_matching_KNN(self,features_train_img, features_query_img, ratio, method):
         bf = self.create_matching_object(method, crossCheck=False)
         rawMatches = bf.knnMatch(features_train_img, features_query_img, k=2)
@@ -100,11 +95,7 @@ class StitchUI(QDialog):
             if m.distance < n.distance * ratio:
                 matches.append(m)
         return matches
-    def maxmatch(self,train_photo,query_photo):
-        kp1,fea1=self._get_kp_features(train_photo, 'sift')
-        kp2,fea2=self._get_kp_features(query_photo, 'sift')
-        matches=self.key_points_matching(fea1,fea2,method=self.feature_extraction_algo)
-        return matches
+
 
     def _adjust(self,StitchedImage):
         gray = cv.cvtColor(StitchedImage, cv.COLOR_BGR2GRAY)
@@ -120,10 +111,8 @@ class StitchUI(QDialog):
         train_photo_gray = cv.cvtColor(train_photo, cv.COLOR_RGB2GRAY)
         keypoints_train_img, features_train_img = self._get_kp_features(train_photo_gray)
         keypoints_query_img, features_query_img = self._get_kp_features(query_photo_gray)
-        if self.feature_to_match == 'bf':
-            matches = self.key_points_matching(features_train_img, features_query_img, method=self.feature_extraction_algo)
 
-        elif self.feature_to_match == 'knn':
+        if self.feature_to_match == 'knn':
             matches = self.key_points_matching_KNN(features_train_img, features_query_img, ratio=0.75,
                                             method=self.feature_extraction_algo)
         M = self.homography_stitching(keypoints_train_img, keypoints_query_img, matches, reprojThresh=54)
@@ -136,20 +125,12 @@ class StitchUI(QDialog):
         result = cv.warpPerspective(train_photo, Homography_Matrix, (width, height))
         result[0:query_photo.shape[0], 0:query_photo.shape[1]] = query_photo
 
-
-        mapped_features_image = cv.drawMatches(train_photo, keypoints_train_img, query_photo, keypoints_query_img,
-                                                matches[:100],
-                                                None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-        plt.imshow(mapped_features_image)
-        plt.axis('off')
-        plt.show()
         return result
     def MAINF(self):
         if __name__ == "__main__":
             self.feature_extraction_algo = 'sift'
             self.feature_to_match = 'knn'
-            temp = self.location+"/*.jpg"
-            image_paths = glob.glob(temp)
+            image_paths = glob.glob('InputImages/*.jpg')
             index = -1
             images = []
             for image in image_paths:
@@ -169,7 +150,7 @@ class StitchUI(QDialog):
                     StitchedImage = self._stitcher(images[pair[1]], images[pair[0]])
                     StitchedImage=self._adjust(StitchedImage)
                     if StitchedImage.shape[1]==(images[pair[0]].shape[1])or StitchedImage.shape[1]==(images[pair[1]].shape[1]):
-                            StitchedImage = self._stitcher(images[pair[0]], images[pair[1]])
+                            StitchedImage =self._stitcher(images[pair[0]], images[pair[1]])
                             StitchedImage = self._adjust(StitchedImage)
                     images.pop(pair[0])
                     images.pop(pair[1]-1)
@@ -186,15 +167,8 @@ class StitchUI(QDialog):
             result = cv.bitwise_and(original, original, mask=mask)
 
             img = result
-            rgb_img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-            plt.figure(figsize=(15, 15))
-            # plt.imshow(rgb_img)
-            # plt.show()
-            # grayscale..
             img = cv.GaussianBlur(img, (7, 7), 1)
             gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-
-            # plt.imshow(gray)
 
             thresh, thresh_img = cv.threshold(gray, 0, 255, cv.THRESH_BINARY)
             rgb_img = cv.cvtColor(thresh_img, cv.COLOR_BGR2RGB)
@@ -233,6 +207,8 @@ class StitchUI(QDialog):
                     cv.putText(image, "Coral Colony", (x + 100, y - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 8)
                     cv.drawContours(image, [box], -1, (12, 121, 59,), 10)
             cv.imwrite('final.jpg', image)
+            self.close()
+            
 
 # initialise GUI Window
 class Window(QtWidgets.QMainWindow):
