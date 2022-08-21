@@ -4,7 +4,7 @@
 #define RED_PIN 11  //used common cathod RGB if u used common anode then change TurnON_RGB to 0 and TurnON_RGB to 255
 #define GREEN_PIN 10
 #define BLUE_PIN 9
-#define C_Motor1_dir_A1 2 //set to 
+#define C_Motor1_dir_A1 2 
 #define C_Motor1_dir_A2 4
 #define C_Motor2_dir_A1 7
 #define C_Motor2_dir_A2 8
@@ -91,6 +91,7 @@ void loop() {
   //pwmOutput = map(pwmOutput, 0, 1023, 0 , 255);
   //analogWrite(C_Motor1_Speed_A3, pwmOutput); // Send PWM signal to L298N Enable pin
   //  key = keypad.getKey();
+  Serial.println("Bluetooth Ready!");
   while(!Serial.available());
   key = Serial.readString();
   Serial.println(key);
@@ -266,7 +267,7 @@ void Voltage_Sensor(int Voltage) {
 }
 // char getData() {
 //   if (Serial.available() > 0) {
-//     char receivedChar = Serial.read();
+    // char receivedChar = Serial.read();
 //     newData = true;
 //     return receivedChar;
 //   }
