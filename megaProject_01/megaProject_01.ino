@@ -12,7 +12,6 @@
 #define C_Motor2_Speed_A3 6  //PWM pin
 #define ESC_PIN_Motor1 3  //pwm pin
 #define ESC_PIN_Motor2 6  //pwm pin
-#define Low_InVoltage_LED 5
 //#define HIGH_InVoltage_LED   12
 #define pot A0
 //#define C_Motor_pot          A1
@@ -34,8 +33,8 @@
 #define MaxPulseWidth 2000
 #define Sensitivity 0.185
 #define NoLoadVolt 2.5
-#define High_Consumed_I_LED 13
 #define MaxCurrent 4
+
 // SoftwareSerial  BT(2,3);
 int MotorSpeed;
 int X_value, Y_value;
@@ -46,6 +45,10 @@ int ESC_Speed;
 char dir;
 char motor;
 String key;
+unsigned int t_start;
+unsigned int t_end;
+const byte High_Consumed_I_LED = 13;
+const byte Low_InVoltage_LED = 5;
 const byte ROWS = 4;  //four rows
 const byte COLS = 4;  //four columns
 // char keys[ROWS][COLS] = {
@@ -62,6 +65,7 @@ Servo ESC_Motor2;
 void setup() {
   Serial.begin(9600);
   // BT.begin(9600);
+  t_start = millis();
   // initializing indicator pins
   pinMode(RED_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
@@ -251,19 +255,14 @@ void Stop() {
 void Voltage_Sensor(int Voltage) {
   float mapped_voltage = 0.0;
   float InVoltage = 0.0;
-  mapped_voltage = ((Voltage * refVoltage) / Mp_resolution);
+  //mapped_voltage = ((Voltage * refVoltage) / Mp_resolution);
+  mapped_voltage = MapFunc(Voltage,0.0,Mp_resolution,0.0,refVoltage);
   InVoltage = mapped_voltage / factor;
-  Serial.println(InVoltage);   // the way we display the voltage will be changed
   if (InVoltage < MinVoltage)  // if the voltage became below min voltage then indicator led will blink until input voltage becomes above min voltage
   {
-    digitalWrite(Low_InVoltage_LED, HIGH);
-    delay(500);
-    digitalWrite(Low_InVoltage_LED, LOW);
-    delay(500);
-  } else if (InVoltage >= MinVoltage) {
-    digitalWrite(Low_InVoltage_LED, LOW);
+   Blink_LED(Low_InVoltage_LED,250); // the way we display the voltage will be changed
   }
-  delay(250);
+  DisplayValue(InVoltage,250);
 }
 // char getData() {
 //   if (Serial.available() > 0) {
@@ -306,18 +305,50 @@ int SetESC_Speed(int Pot_Value) {
 void Current_Sensor(int Current) {
   float voltage = 0.0;
   float consumed_current = 0.0;
-  voltage = (Current * refVoltage) / Mp_resolution;
+  //voltage = (Current * refVoltage) / Mp_resolution;
+  voltage = MapFunc(Current,0.0,Mp_resolution,0.0,refVoltage);
   consumed_current = ((voltage - NoLoadVolt) / Sensitivity);
   if (consumed_current > MaxCurrent)  // if consumed current is above max current then a blinking LED will indicate this
   {
-    digitalWrite(High_Consumed_I_LED, HIGH);
-    delay(500);
-    digitalWrite(High_Consumed_I_LED, LOW);
-    delay(500);
-  } else if (consumed_current < MaxCurrent) {
-    digitalWrite(High_Consumed_I_LED, LOW);
+    Blink_LED(High_Consumed_I_LED,250);
   }
+  DisplayValue(consumed_current,250);
+}
 
-  Serial.println(consumed_current);
-  delay(250);
+float MapFunc(float sensor ,float InputMin, float InputMax , float OutputMin,float OutputMax )
+{ 
+  float slope = 0.0 ;
+  float value = 0.0 ;
+  float Input = 0.0 ;         
+  float Output = 0.0;         
+  InputMin = 0;         
+  OutputMin = 0;        
+  /* y = mx + c */      
+  /*slope = (y2 - y1) / (x2 - x1)*/
+  slope = (OutputMax - OutputMin)/(InputMax - InputMin);
+  Input = InputMax - InputMin ;
+  Output = (slope*Input);
+  InputMax = Input ;
+  OutputMax = Output;
+  value = (OutputMax * sensor )/InputMax;
+  
+  return value;
+}
+
+void Blink_LED(byte led,unsigned long period)
+{
+  t_end = millis();
+  if(t_end - t_start >= period){
+    digitalWrite(led,!digitalRead(led));
+    t_start = t_end;
+  }
+}
+
+void DisplayValue(float num, unsigned long period)
+{ 
+   t_end = millis();
+  if(t_end - t_start >=period){
+     Serial.println(num);
+    t_start = t_end;
+  }  
 }
