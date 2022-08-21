@@ -1,3 +1,4 @@
+import re
 import sys
 from urllib import response
 from StitchUI import Ui_Dialog
@@ -12,15 +13,16 @@ import serial
 import matplotlib.pyplot as plt
 import glob
 global arduino
-arduino = serial.Serial(port='/dev/cu.usbmodem11301'
-                        ,baudrate=19200,stopbits=1,timeout=1)
+# port = '/dev/cu.usbmodem11301'
+port = '/dev/cu.HC-06'
+arduino = serial.Serial(port= port
+                        ,baudrate=9600,timeout=1)
 class getArduino(QRunnable):
     def __init__(self):
         super(getArduino,self).__init__()
         self.signal = None
     def run(self):
-            self.signal =  arduino.readline().strip().decode("utf-8")
-            print(self.signal)        
+            return  arduino.readline().strip().decode("utf-8")
     def getRead(self):
         Ar_signal = self.signal
         return  Ar_signal
@@ -173,7 +175,7 @@ class StitchUI(QDialog):
                 images.pop(self.pair[1]-1)
                 self.index=self.index-1
                 images.insert(0,StitchedImage)
-                cv.imwrite("Stitched_Panorama.jpg", StitchedImage)
+            cv.imwrite("Stitched_Panorama.jpg", StitchedImage)
 # initialise GUI Window
 class Window(QtWidgets.QMainWindow):
     def __init__(self):
@@ -200,10 +202,12 @@ class Window(QtWidgets.QMainWindow):
         self.ui.Left.clicked.connect(self.f_left)
         self.ui.Stop.clicked.connect(self.f_stop)
         self.ui.swTask.clicked.connect(self.Stitch)
+        self.ui.MOTOR.clicked.connect(self.selectMotor)
+        self.ui.ESC.clicked.connect(self.selectESC)
         self.threadpool = QThreadPool()
         # self.timer = QtCore.QTimer(self)
         # self.timer.timeout.connect(self.showVolt)
-        # self.timer.start(1500)
+        # self.timer.start(15)
         self.i=0
         self.thread = VideoThread()
         self.thread.change_pixmap_signal.connect(self.update)
@@ -213,37 +217,39 @@ class Window(QtWidgets.QMainWindow):
         stitch.exec()
     # def showVolt(self):
     #     volt = getArduino()
-    #     while True:
-    #         volt.run()
-    #         time.sleep(0.1)
-    #         break
-    #     Read = volt.getRead()
-    #     self.ui.Volt.setText(Read+"V")
+    #     read = str(volt.getRead())
+    #     self.ui.Volt.setText(read+"V")
+    #     print(read)
     #     self.threadpool.start(volt)
-
+    def selectMotor(self):
+        motor = sendArduino('m1')
+        self.threadpool.start(motor)
+    def selectESC(self):
+        ESC = sendArduino('m2')
+        self.threadpool.start(ESC)
     def f_up (self):
-        up = sendArduino('3')
+        up = sendArduino('d3')
         self.threadpool.start(up)
     def f_back (self):
-        back = sendArduino('4')
+        back = sendArduino('d4')
         self.threadpool.start(back)    
     def f_right (self):
-        right = sendArduino('5')
+        right = sendArduino('d5')
         self.threadpool.start(right)
     def f_left (self):
-        left = sendArduino('6')
+        left = sendArduino('d6')
         self.threadpool.start(left)
     def f_stop (self):
-        stop = sendArduino('7')
+        stop = sendArduino('d7')
         self.threadpool.start(stop)
     def Speed1 (self):
-        s_1 = sendArduino('0')
+        s_1 = sendArduino('s0')
         self.threadpool.start(s_1)
     def Speed2 (self):
-        s_2 = sendArduino('1')
+        s_2 = sendArduino('s1')
         self.threadpool.start(s_2)
     def Speed3 (self):
-        s_3 = sendArduino('2')
+        s_3 = sendArduino('s2')
         self.threadpool.start(s_3)
         #update video frame
     def update(self, cv_img):
