@@ -1,4 +1,3 @@
-// #include <Keypad.h>
 // #include <SoftwareSerial.h>
 #include <Servo.h>
 #define RED_PIN 11  //used common cathod RGB if u used common anode then change TurnON_RGB to 0 and TurnON_RGB to 255
@@ -12,9 +11,7 @@
 #define C_Motor2_Speed_A3 6  //PWM pin
 #define ESC_PIN_Motor1 3  //pwm pin
 #define ESC_PIN_Motor2 6  //pwm pin
-//#define HIGH_InVoltage_LED   12
 #define pot A0
-//#define C_Motor_pot          A1
 #define joyX A2
 #define joyY A3
 #define VoltageSensor A4
@@ -25,8 +22,8 @@
 #define Med_Speed 170
 #define High_Speed 255
 #define Mp_resolution 1023.0
-#define factor 0.2      // this voltage sensor consists of a voltage divider circuit and its factor =R2/(R1+R2) = 7.5k/(30k+7.5k) = 0.2 where R2 is connected in parallel with Vout
-#define refVoltage 5.0  // arduino voltage
+#define factor 0.2      
+#define refVoltage 5.0  
 #define MinVoltage 15
 //#define MaxVoltage           24
 #define MinPulseWidth 1000
@@ -49,19 +46,10 @@ unsigned int t_start;
 unsigned int t_end;
 const byte High_Consumed_I_LED = 13;
 const byte Low_InVoltage_LED = 5;
-const byte ROWS = 4;  //four rows
-const byte COLS = 4;  //four columns
-// char keys[ROWS][COLS] = {
-//   {'1','2','3','A'},
-//   {'4','5','6','B'},
-//   {'7','8','9','C'},
-//   {'*','0','#','D'}
-// };
-byte rowPins[ROWS] = { 0, 1, 5, 6 };    //connect to the row pinouts of the keypad
-byte colPins[COLS] = { 7, 8, 12, 13 };  //connect to the column pinouts of the keypad
-// Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );  // struct to pass (keys , rowpins,rows and cols) values to it
+
 Servo ESC_Motor1;
 Servo ESC_Motor2;
+
 void setup() {
   Serial.begin(9600);
   // BT.begin(9600);
@@ -89,18 +77,9 @@ void setup() {
   delay(5000);
 }
 void loop() {
-  
-  //  key = keypad.getKey();
-  // Serial.println("Bluetooth Ready!");
+
   while(!Serial.available());
   key = Serial.readString();
-  // Serial.println(key);
-  //Voltage = analogRead(VoltageSensor);
-  // float mapped_voltage = 0.0;
-  // float InVoltage = 0.0;
-  // mapped_voltage = ((Voltage * refVoltage) / Mp_resolution);
-  // InVoltage = mapped_voltage / factor;
-  // Serial.println(InVoltage); 
   if (key[0]=='s'){
     // String temp = String(key[1]);
     Speed = String(key[1]).toInt();
@@ -117,47 +96,29 @@ void loop() {
   Serial.println(dir);
   if(motor =='1')
   {
-            if (dir == '3')  //Signal sent from python to move forward = 
+            if (dir == '3')  //Signal sent from python to move forward = 3
           {
             Forward();
-            Serial.println("forward");
           } else if (dir == '4' )  //Signal sent from python to move backward = 4
           {
             Backward();
-            Serial.println("back");
           } else if (dir == '5')  //Signal sent from python to move right = 5
           {
             Right();
-            // Serial.println("Right");
            } else if (dir == '6')  //Signal sent from python to move left = 6
           {
             Left();
-            // Serial.println("left");
           } else if (dir == '7')  //Signal sent from python to  stop = 7
           {
             Stop();
-            // Serial.println("stop");
           }
      }
     else if (motor == "2") {
       ESC_Speed = analogRead(pot);
-      Speed = SetESC_Speed(ESC_Speed);  // will be modified
+      Speed = SetESC_Speed(ESC_Speed);  
       Speed = map(Speed, 0, 180, 0, 2);
       RGB_SpeedIndicator(Speed);
     }
-
-    //analogWrite(C_Motor_Speed_A3, pwmOutput); // Send PWM signal to L298N Enable pin
-    //  key = keypad.getKey();
-    //  if (key)
-    //  {
-    //   SetMotor_Dir(key);
-    //  }
-    // MotorSpeed = analogRead(pot);
-    //MotorSpeed = key;
-    //Speed = SetMotor_Speed(MotorSpeed);
-    //ESC_Speed = analogRead(pot);
-    //Speed = SetESC_Speed(ESC_Speed);
-    
     // Reading voltage and current sensor values
     Voltage = analogRead(VoltageSensor);
     Voltage_Sensor(Voltage);
@@ -205,12 +166,6 @@ void SetMotor_Speed(int Speed) {
   }
 }
 
-//void SetMotor_Dir(char key)
-//{
-//X_value = map(X_value,0,1023,0,3);                  here,will replace joystick with keypad and below condition based on keypad
-//Y_value = map(Y_value,0,1023,0,3);
-//}
-
 void Forward() {
   digitalWrite(C_Motor1_dir_A1, HIGH);  //  Motor1 moves forward
   digitalWrite(C_Motor1_dir_A2, LOW);
@@ -254,45 +209,15 @@ void Stop() {
 void Voltage_Sensor(int Voltage) {
   float mapped_voltage = 0.0;
   float InVoltage = 0.0;
-  //mapped_voltage = ((Voltage * refVoltage) / Mp_resolution);
   mapped_voltage = MapFunc(Voltage,0.0,Mp_resolution,0.0,refVoltage);
   InVoltage = mapped_voltage / factor;
   if (InVoltage < MinVoltage)  // if the voltage became below min voltage then indicator led will blink until input voltage becomes above min voltage
   {
-   Blink_LED(Low_InVoltage_LED,250); // the way we display the voltage will be changed
+   Blink_LED(Low_InVoltage_LED,250); 
   }
   DisplayValue(InVoltage,250);
 }
-// char getData() {
-//   if (Serial.available() > 0) {
-    // char receivedChar = Serial.read();
-//     newData = true;
-//     return receivedChar;
-//   }
-// }
 
-// void getData() {
-//     static byte ndx = 0;
-//     char endMarker = '\n';
-//     char rc;
-    
-//     while (Serial.available() > 0 && newData == false) {
-//         rc = Serial.read();
-
-//         if (rc != endMarker) {
-//             key[ndx] = rc;
-//             ndx++;
-//             if (ndx >= numChars) {
-//                 ndx = numChars - 1;
-//             }
-//         }
-//         else {
-//             key[ndx] = '\0'; // terminate the string
-//             ndx = 0;
-//             newData = true;
-//         }
-//     }
-// }
 int SetESC_Speed(int Pot_Value) {
   int Speed;
   Speed = map(Pot_Value, 0, 1023, 0, 180);  // varying the potentiometer means increasing and decreasing the speed
@@ -304,7 +229,6 @@ int SetESC_Speed(int Pot_Value) {
 void Current_Sensor(int Current) {
   float voltage = 0.0;
   float consumed_current = 0.0;
-  //voltage = (Current * refVoltage) / Mp_resolution;
   voltage = MapFunc(Current,0.0,Mp_resolution,0.0,refVoltage);
   consumed_current = ((voltage - NoLoadVolt) / Sensitivity);
   if (consumed_current > MaxCurrent)  // if consumed current is above max current then a blinking LED will indicate this
