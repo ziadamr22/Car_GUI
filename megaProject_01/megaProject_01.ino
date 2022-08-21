@@ -89,17 +89,13 @@ void setup() {
   delay(5000);
 }
 void loop() {
-  // X_value = analogRead(joyX);
-  // Y_value = analogRead(joyY);
-  //pwmOutput = analogRead(pot);
-  //pwmOutput = map(pwmOutput, 0, 1023, 0 , 255);
-  //analogWrite(C_Motor1_Speed_A3, pwmOutput); // Send PWM signal to L298N Enable pin
+  
   //  key = keypad.getKey();
   // Serial.println("Bluetooth Ready!");
   while(!Serial.available());
   key = Serial.readString();
   // Serial.println(key);
-  // Voltage = analogRead(VoltageSensor);
+  //Voltage = analogRead(VoltageSensor);
   // float mapped_voltage = 0.0;
   // float InVoltage = 0.0;
   // mapped_voltage = ((Voltage * refVoltage) / Mp_resolution);
@@ -150,7 +146,6 @@ void loop() {
       RGB_SpeedIndicator(Speed);
     }
 
-
     //analogWrite(C_Motor_Speed_A3, pwmOutput); // Send PWM signal to L298N Enable pin
     //  key = keypad.getKey();
     //  if (key)
@@ -160,10 +155,14 @@ void loop() {
     // MotorSpeed = analogRead(pot);
     //MotorSpeed = key;
     //Speed = SetMotor_Speed(MotorSpeed);
-    ESC_Speed = analogRead(pot);
-    Speed = SetESC_Speed(ESC_Speed);
-
-    //Current = analogRead(CurrentSensor);
+    //ESC_Speed = analogRead(pot);
+    //Speed = SetESC_Speed(ESC_Speed);
+    
+    // Reading voltage and current sensor values
+    Voltage = analogRead(VoltageSensor);
+    Voltage_Sensor(Voltage);
+    Current = analogRead(CurrentSensor);
+    Current_Sensor(Current);
   
 }
 void RGB_SpeedIndicator(int MotorSpeed) {
