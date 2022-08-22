@@ -208,6 +208,9 @@ class StitchUI(QDialog):
                     cv.putText(image, "Coral Colony", (x + 100, y - 20), cv.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 8)
                     cv.drawContours(image, [box], -1, (12, 121, 59,), 10)
             cv.imwrite('final.jpg', image)
+            cv.namedWindow("Final", cv.WINDOW_NORMAL)
+            cv.resizeWindow("Final",image.shape[0],image.shape[1])
+            cv.imshow("Final",image)
             self.close()
             
 
