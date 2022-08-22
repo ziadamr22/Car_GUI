@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 import glob
 global arduino
 #Location of Bluetooth Module port
-port = '/dev/cu.usbmodem11301'
-# port = '/dev/cu.HC-06'
+# port = '/dev/cu.usbmodem11301'
+port = '/dev/cu.HC-06'
 arduino = serial.Serial(port= port
                         ,baudrate=9600,timeout=1)
 class getArduino(QRunnable):
@@ -266,10 +266,11 @@ class Window(QtWidgets.QMainWindow):
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
-        if sensor[0] == 'v':
-                volt = sensor[1:c]
-        if sensor[c] =="c":
-                current = sensor[c+1:]
+        if c != -1:
+            if sensor[0] == 'v':
+                    volt = sensor[1:c]
+            if sensor[c] =="c":
+                    current = sensor[c+1:]
         print(volt)
         print(current)
         self.ui.Volt.setText(volt +"V")
@@ -284,10 +285,11 @@ class Window(QtWidgets.QMainWindow):
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
-        if sensor[0] == 'v':
-                volt = sensor[1:c]
-        if sensor[c] =="c":
-                current = sensor[c+1:]
+        if c != -1:
+            if sensor[0] == 'v':
+                    volt = sensor[1:c]
+            if sensor[c] =="c":
+                    current = sensor[c+1:]
         print(volt)
         print(current)
         self.ui.Volt.setText(volt +"V")
@@ -302,10 +304,11 @@ class Window(QtWidgets.QMainWindow):
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
-        if sensor[0] == 'v':
-                volt = sensor[1:c]
-        if sensor[c] =="c":
-                current = sensor[c+1:]
+        if c != -1:
+            if sensor[0] == 'v':
+                    volt = sensor[1:c]
+            if sensor[c] =="c":
+                    current = sensor[c+1:]
         print(volt)
         print(current)
         self.ui.Volt.setText(volt +"V")
@@ -320,10 +323,11 @@ class Window(QtWidgets.QMainWindow):
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
-        if sensor[0] == 'v':
-                volt = sensor[1:c]
-        if sensor[c] =="c":
-                current = sensor[c+1:]
+        if c != -1:
+            if sensor[0] == 'v':
+                    volt = sensor[1:c]
+            if sensor[c] =="c":
+                    current = sensor[c+1:]
         print(volt)
         print(current)
         self.ui.Volt.setText(volt +"V")
@@ -338,10 +342,11 @@ class Window(QtWidgets.QMainWindow):
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
-        if sensor[0] == 'v':
-                volt = sensor[1:c]
-        if sensor[c] =="c":
-                current = sensor[c+1:]
+        if c != -1:
+            if sensor[0] == 'v':
+                    volt = sensor[1:c]
+            if sensor[c] =="c":
+                    current = sensor[c+1:]
         print(volt)
         print(current)
         self.ui.Volt.setText(volt +"V")
@@ -356,10 +361,11 @@ class Window(QtWidgets.QMainWindow):
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
-        if sensor[0] == 'v':
-                volt = sensor[1:c]
-        if sensor[c] =="c":
-                current = sensor[c+1:]
+        if c != -1:
+            if sensor[0] == 'v':
+                    volt = sensor[1:c]
+            if sensor[c] =="c":
+                    current = sensor[c+1:]
         print(volt)
         print(current)
         self.ui.Volt.setText(volt +"V")
@@ -374,10 +380,11 @@ class Window(QtWidgets.QMainWindow):
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
-        if sensor[0] == 'v':
-                volt = sensor[1:c]
-        if sensor[c] =="c":
-                current = sensor[c+1:]
+        if c != -1:
+            if sensor[0] == 'v':
+                    volt = sensor[1:c]
+            if sensor[c] =="c":
+                    current = sensor[c+1:]
         print(volt)
         print(current)
         self.ui.Volt.setText(volt +"V")
@@ -392,10 +399,11 @@ class Window(QtWidgets.QMainWindow):
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
-        if sensor[0] == 'v':
-                volt = sensor[1:c]
-        if sensor[c] =="c":
-                current = sensor[c+1:]
+        if c != -1:
+            if sensor[0] == 'v':
+                    volt = sensor[1:c]
+            if sensor[c] =="c":
+                    current = sensor[c+1:]
         print(volt)
         print(current)
         self.ui.Volt.setText(volt +"V")
@@ -410,10 +418,11 @@ class Window(QtWidgets.QMainWindow):
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
-        if sensor[0] == 'v':
-                volt = sensor[1:c]
-        if sensor[c] =="c":
-                current = sensor[c+1:]
+        if c != -1:
+            if sensor[0] == 'v':
+                    volt = sensor[1:c]
+            if sensor[c] =="c":
+                    current = sensor[c+1:]
         print(volt)
         print(current)
         self.ui.Volt.setText(volt +"V")
@@ -428,10 +437,11 @@ class Window(QtWidgets.QMainWindow):
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
-        if sensor[0] == 'v':
-                volt = sensor[1:c]
-        if sensor[c] =="c":
-                current = sensor[c+1:]
+        if c != -1:
+            if sensor[0] == 'v':
+                    volt = sensor[1:c]
+            if sensor[c] =="c":
+                    current = sensor[c+1:]
         print(volt)
         print(current)
         self.ui.Volt.setText(volt +"V")
