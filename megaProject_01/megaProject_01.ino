@@ -1,4 +1,3 @@
-// #include <SoftwareSerial.h>
 #include <Servo.h>
 #define RED_PIN 11  //used common cathod RGB if u used common anode then change TurnON_RGB to 0 and TurnON_RGB to 255
 #define GREEN_PIN 10
@@ -32,7 +31,6 @@
 #define NoLoadVolt 2.5
 #define MaxCurrent 4
 
-// SoftwareSerial  BT(2,3);
 int MotorSpeed;
 int X_value, Y_value;
 int pwmOutput;
@@ -78,6 +76,7 @@ void setup() {
 }
 void loop() {
 
+  Serial.println("Hello")  ;
   while(!Serial.available());
   key = Serial.readString();
   if (key[0]=='s'){
@@ -92,8 +91,6 @@ void loop() {
   else if (key[0]=='d'){
     dir = key[1];
   }
-  Serial.println(motor);
-  Serial.println(dir);
   if(motor =='1')
   {
             if (dir == '3')  //Signal sent from python to move forward = 3
@@ -124,6 +121,7 @@ void loop() {
     Voltage_Sensor(Voltage);
     Current = analogRead(CurrentSensor);
     Current_Sensor(Current);
+    Serial.println();
   
 }
 void RGB_SpeedIndicator(int MotorSpeed) {
@@ -215,7 +213,8 @@ void Voltage_Sensor(int Voltage) {
   {
    Blink_LED(Low_InVoltage_LED,250); 
   }
-  DisplayValue(InVoltage,250);
+  Serial.print'v');
+  Serial.print(InVoltage);
 }
 
 int SetESC_Speed(int Pot_Value) {
@@ -235,7 +234,8 @@ void Current_Sensor(int Current) {
   {
     Blink_LED(High_Consumed_I_LED,250);
   }
-  DisplayValue(consumed_current,250);
+  Serial.print('c');
+  Serial.print(consumed_current);
 }
 
 float MapFunc(float sensor ,float InputMin, float InputMax , float OutputMin,float OutputMax )
@@ -265,13 +265,4 @@ void Blink_LED(byte led,unsigned long period)
     digitalWrite(led,!digitalRead(led));
     t_start = t_end;
   }
-}
-
-void DisplayValue(float num, unsigned long period)
-{ 
-   t_end = millis();
-  if(t_end - t_start >=period){
-     Serial.println(num);
-    t_start = t_end;
-  }  
 }

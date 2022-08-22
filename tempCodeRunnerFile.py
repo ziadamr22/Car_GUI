@@ -1,2 +1,2 @@
 
-        print(s.__run__())
+                current = sensor[c+1:]

@@ -1,3 +1,4 @@
+from asyncore import read
 import sys
 import imutils
 from urllib import response
@@ -13,6 +14,7 @@ import serial
 import matplotlib.pyplot as plt
 import glob
 global arduino
+#Location of Bluetooth Module port
 port = '/dev/cu.usbmodem11301'
 # port = '/dev/cu.HC-06'
 arduino = serial.Serial(port= port
@@ -238,12 +240,8 @@ class Window(QtWidgets.QMainWindow):
         self.ui.swTask.clicked.connect(self.Stitch)
         self.ui.MOTOR.clicked.connect(self.selectMotor)
         self.ui.ESC.clicked.connect(self.selectESC)
+        self.read = getArduino()
         self.threadpool = QThreadPool()
-        global volt
-        volt = getArduino()
-        self.timer = QtCore.QTimer(self)
-        self.timer.timeout.connect(self.showVolt)
-        self.timer.start(3000)
         self.i=0
         self.thread = VideoThread()
         self.thread.change_pixmap_signal.connect(self.update)
@@ -251,43 +249,193 @@ class Window(QtWidgets.QMainWindow):
     def Stitch(self):
         stitch = StitchUI(self)
         stitch.exec()
-    def showVolt(self):
-        volt = getArduino()
-        volt.run()
-        read = volt.getRead()
-        self.ui.Volt.setText(read+"V")
-        print(read)
-        self.threadpool.start(volt)
+    # def showVolt(self):
+    #     volt = getArduino()
+    #     volt.run()
+    #     read = volt.getRead()
+    #     self.ui.Volt.setText(read+"V")
+    #     print(read)
+    #     # self.threadpool.start(volt.run())
     def selectMotor(self):
         motor = sendArduino('m1')
         self.threadpool.start(motor)
+        self.read.run()
+        sensor = self.read.getRead()
+        volt = ''
+        current = ''
+        print(sensor)
+        c = sensor.find('c')
+        print("c = ",c)
+        if sensor[0] == 'v':
+                volt = sensor[1:c]
+        if sensor[c] =="c":
+                current = sensor[c+1:]
+        print(volt)
+        print(current)
+        self.ui.Volt.setText(volt +"V")
+        self.ui.Current.setText(current +"A")
     def selectESC(self):
         ESC = sendArduino('m2')
         self.threadpool.start(ESC)
+        self.read.run()
+        sensor = self.read.getRead()
+        volt = ''
+        current = ''
+        print(sensor)
+        c = sensor.find('c')
+        print("c = ",c)
+        if sensor[0] == 'v':
+                volt = sensor[1:c]
+        if sensor[c] =="c":
+                current = sensor[c+1:]
+        print(volt)
+        print(current)
+        self.ui.Volt.setText(volt +"V")
+        self.ui.Current.setText(current +"A")
     def f_up (self):
         up = sendArduino('d3')
         self.threadpool.start(up)
+        self.read.run()
+        sensor = self.read.getRead()
+        volt = ''
+        current = ''
+        print(sensor)
+        c = sensor.find('c')
+        print("c = ",c)
+        if sensor[0] == 'v':
+                volt = sensor[1:c]
+        if sensor[c] =="c":
+                current = sensor[c+1:]
+        print(volt)
+        print(current)
+        self.ui.Volt.setText(volt +"V")
+        self.ui.Current.setText(current +"A")
     def f_back (self):
         back = sendArduino('d4')
-        self.threadpool.start(back)    
+        self.threadpool.start(back)
+        self.read.run()
+        sensor = self.read.getRead()
+        volt = ''
+        current = ''
+        print(sensor)
+        c = sensor.find('c')
+        print("c = ",c)
+        if sensor[0] == 'v':
+                volt = sensor[1:c]
+        if sensor[c] =="c":
+                current = sensor[c+1:]
+        print(volt)
+        print(current)
+        self.ui.Volt.setText(volt +"V")
+        self.ui.Current.setText(current +"A")    
     def f_right (self):
         right = sendArduino('d5')
         self.threadpool.start(right)
+        self.read.run()
+        sensor = self.read.getRead()
+        volt = ''
+        current = ''
+        print(sensor)
+        c = sensor.find('c')
+        print("c = ",c)
+        if sensor[0] == 'v':
+                volt = sensor[1:c]
+        if sensor[c] =="c":
+                current = sensor[c+1:]
+        print(volt)
+        print(current)
+        self.ui.Volt.setText(volt +"V")
+        self.ui.Current.setText(current +"A")
     def f_left (self):
         left = sendArduino('d6')
         self.threadpool.start(left)
+        self.read.run()
+        sensor = self.read.getRead()
+        volt = ''
+        current = ''
+        print(sensor)
+        c = sensor.find('c')
+        print("c = ",c)
+        if sensor[0] == 'v':
+                volt = sensor[1:c]
+        if sensor[c] =="c":
+                current = sensor[c+1:]
+        print(volt)
+        print(current)
+        self.ui.Volt.setText(volt +"V")
+        self.ui.Current.setText(current +"A")
     def f_stop (self):
         stop = sendArduino('d7')
         self.threadpool.start(stop)
+        self.read.run()
+        sensor = self.read.getRead()
+        volt = ''
+        current = ''
+        print(sensor)
+        c = sensor.find('c')
+        print("c = ",c)
+        if sensor[0] == 'v':
+                volt = sensor[1:c]
+        if sensor[c] =="c":
+                current = sensor[c+1:]
+        print(volt)
+        print(current)
+        self.ui.Volt.setText(volt +"V")
+        self.ui.Current.setText(current +"A")
     def Speed1 (self):
         s_1 = sendArduino('s0')
         self.threadpool.start(s_1)
+        self.read.run()
+        sensor = self.read.getRead()
+        volt = ''
+        current = ''
+        print(sensor)
+        c = sensor.find('c')
+        print("c = ",c)
+        if sensor[0] == 'v':
+                volt = sensor[1:c]
+        if sensor[c] =="c":
+                current = sensor[c+1:]
+        print(volt)
+        print(current)
+        self.ui.Volt.setText(volt +"V")
+        self.ui.Current.setText(current +"A")
     def Speed2 (self):
         s_2 = sendArduino('s1')
         self.threadpool.start(s_2)
+        self.read.run()
+        sensor = self.read.getRead()
+        volt = ''
+        current = ''
+        print(sensor)
+        c = sensor.find('c')
+        print("c = ",c)
+        if sensor[0] == 'v':
+                volt = sensor[1:c]
+        if sensor[c] =="c":
+                current = sensor[c+1:]
+        print(volt)
+        print(current)
+        self.ui.Volt.setText(volt +"V")
+        self.ui.Current.setText(current +"A")
     def Speed3 (self):
         s_3 = sendArduino('s2')
         self.threadpool.start(s_3)
+        self.read.run()
+        sensor = self.read.getRead()
+        volt = ''
+        current = ''
+        print(sensor)
+        c = sensor.find('c')
+        print("c = ",c)
+        if sensor[0] == 'v':
+                volt = sensor[1:c]
+        if sensor[c] =="c":
+                current = sensor[c+1:]
+        print(volt)
+        print(current)
+        self.ui.Volt.setText(volt +"V")
+        self.ui.Current.setText(current +"A")
         #update video frame
     def update(self, cv_img):
         qt_img = self.convert_cv_qt(cv_img)
