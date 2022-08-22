@@ -130,7 +130,8 @@ class StitchUI(QDialog):
         if __name__ == "__main__":
             self.feature_extraction_algo = 'sift'
             self.feature_to_match = 'knn'
-            image_paths = glob.glob('InputImages/*.jpg')
+            temp = self.location+'/*.jpg'
+            image_paths = glob.glob(temp)
             index = -1
             images = []
             for image in image_paths:
