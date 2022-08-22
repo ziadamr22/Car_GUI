@@ -1,7 +1,5 @@
-from asyncore import read
 import sys
 import imutils
-from urllib import response
 from StitchUI import Ui_Dialog
 from FrontEnd import Ui_MainWindow_
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -15,8 +13,8 @@ import matplotlib.pyplot as plt
 import glob
 global arduino
 #Location of Bluetooth Module port
-# port = '/dev/cu.usbmodem11301'
-port = '/dev/cu.HC-06'
+port = '/dev/cu.usbmodem11301'
+# port = '/dev/cu.HC-06'
 arduino = serial.Serial(port= port
                         ,baudrate=9600,timeout=1)
 class getArduino(QRunnable):
@@ -261,8 +259,8 @@ class Window(QtWidgets.QMainWindow):
         self.threadpool.start(motor)
         self.read.run()
         sensor = self.read.getRead()
-        volt = ''
-        current = ''
+        volt = '0'
+        current = '0'
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
@@ -280,8 +278,8 @@ class Window(QtWidgets.QMainWindow):
         self.threadpool.start(ESC)
         self.read.run()
         sensor = self.read.getRead()
-        volt = ''
-        current = ''
+        volt = '0'
+        current = '0'
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
@@ -299,8 +297,8 @@ class Window(QtWidgets.QMainWindow):
         self.threadpool.start(up)
         self.read.run()
         sensor = self.read.getRead()
-        volt = ''
-        current = ''
+        volt = '0'
+        current = '0'
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
@@ -318,8 +316,8 @@ class Window(QtWidgets.QMainWindow):
         self.threadpool.start(back)
         self.read.run()
         sensor = self.read.getRead()
-        volt = ''
-        current = ''
+        volt = '0'
+        current = '0'
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
@@ -337,8 +335,8 @@ class Window(QtWidgets.QMainWindow):
         self.threadpool.start(right)
         self.read.run()
         sensor = self.read.getRead()
-        volt = ''
-        current = ''
+        volt = '0'
+        current = '0'
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
@@ -356,8 +354,8 @@ class Window(QtWidgets.QMainWindow):
         self.threadpool.start(left)
         self.read.run()
         sensor = self.read.getRead()
-        volt = ''
-        current = ''
+        volt = '0'
+        current = '0'
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
@@ -375,8 +373,8 @@ class Window(QtWidgets.QMainWindow):
         self.threadpool.start(stop)
         self.read.run()
         sensor = self.read.getRead()
-        volt = ''
-        current = ''
+        volt = '0'
+        current = '0'
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
@@ -394,8 +392,8 @@ class Window(QtWidgets.QMainWindow):
         self.threadpool.start(s_1)
         self.read.run()
         sensor = self.read.getRead()
-        volt = ''
-        current = ''
+        volt = '0'
+        current = '0'
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
@@ -413,8 +411,8 @@ class Window(QtWidgets.QMainWindow):
         self.threadpool.start(s_2)
         self.read.run()
         sensor = self.read.getRead()
-        volt = ''
-        current = ''
+        volt = '0'
+        current = '0'
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
@@ -432,8 +430,8 @@ class Window(QtWidgets.QMainWindow):
         self.threadpool.start(s_3)
         self.read.run()
         sensor = self.read.getRead()
-        volt = ''
-        current = ''
+        volt = '0'
+        current = '0'
         print(sensor)
         c = sensor.find('c')
         print("c = ",c)
